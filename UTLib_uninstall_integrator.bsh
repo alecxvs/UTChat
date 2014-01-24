@@ -1,0 +1,20 @@
+#!/bin/bash
+############
+# UTLib Integrator Uninstallation
+# This script is CC0 Public Domain (http://creativecommons.org/publicdomain/zero/1.0/)
+###############################
+DIRS=./*/
+echo "Parsing Modules"
+for dir in $DIRS
+do
+	if [ "$dir" != "./UTLib/" ]; then
+		if [ -L "$dir/shared/utlIntegrator.lua" ]; then
+			echo "Removing SymLink from $dir/shared/utlIntegrator.lua"
+			unlink "$dir/shared/utlIntegrator.lua"
+		else if [ -f "$dir/shared/utlIntegrator.lua" ]; then
+			echo "Removing $dir/shared/utlIntegrator.lua"
+				rm "$dir/shared/utlIntegrator.lua"
+			fi
+		fi
+	fi
+done

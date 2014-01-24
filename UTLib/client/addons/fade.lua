@@ -55,7 +55,6 @@ Events:Subscribe( "UTLibLoaded", function()
 		ueFade.RepeatDelay	= Extra.RepeatDelay or 0
 		ueFade.Rewind		= Extra.Rewind
 		ueFade.AccessParent	= Extra.Override
-		ueFade.Terminate   = Extra.Terminate
 		
 		if Extra.Repeat == true or Extra.Repeat == 1 then
 			ueFade.Repetitions	= 0
@@ -77,19 +76,10 @@ Events:Subscribe( "UTLibLoaded", function()
 	UTLib.Fade.Render =
 	function( block, effect )
 		local timeElapsed, timeEnd
-		if os.clock() == effect.osclock then goto nocalc else effect.osclock = os.clock() end
-		if effect.StartAlpha > effect.EndAlpha then
-			effect.rewinding = true
-			effect.Rewind = true
-			local s = effect.StartAlpha
-			effect.StartAlpha = effect.EndAlpha
-			effect.EndAlpha = s
-		end
+		if os.clock() == effect.osclock then goto nocalc end
+		effect.osclock = os.clock()
 		
-		if not effect.init then
-			effect.StartTime = os.clock() + effect.StartTime
-			effect.init = true
-		end
+		if effect.StartTime < block.parent.startTime then effect.StartTime = block.parent.startTime + effect.StartTime end
 		timeEnd = effect.StartTime + effect.Duration
 		
 		if effect.rewinding then
@@ -100,27 +90,25 @@ Events:Subscribe( "UTLibLoaded", function()
 		
 		if effect.StartTime <= os.clock() and os.clock() <= timeEnd then
 			effect.alpha = effect.Func(timeElapsed, effect.StartAlpha, effect.EndAlpha, effect.Duration)
-			print(effect.StartAlpha," ~ ",effect.alpha," ~ ",effect.EndAlpha)
 		elseif effect.StartTime > os.clock() then
 			effect.alpha = effect.StartAlpha
 		end
 		if os.clock() >= timeEnd then
 			if not effect.Rewind or effect.Rewind and effect.rewinding then
+				effect.rewinding = false
 				if effect.Repetitions > 0 then
 					effect.Repetitions = effect.Repetitions - 1
 					effect.Repeat = effect.Repetitions > 0
 				end
 				if effect.Repeat then
 					effect.StartTime = timeEnd + effect.RepeatDelay
-					effect.rewinding = false
 				end
-				effect.alpha = effect.Rewind and effect.StartAlpha or effect.EndAlpha
-				if effect.Terminate then effect = nil return end
+				alpha = effect.StartAlpha
 			else
 				effect.rewinding = true
 				effect.StartTime = timeEnd
-				effect.alpha = effect.EndAlpha
 			end
+			effect.alpha = effect.EndAlpha
 		end
 		::nocalc::
 		if effect.AccessParent then

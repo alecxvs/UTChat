@@ -1,0 +1,23 @@
+#!/bin/bash
+############
+# UTLib Integrator Installation
+# This script is CC0 Public Domain (http://creativecommons.org/publicdomain/zero/1.0/)
+###############################
+echo "Checking if UTLib is intact..."
+if [ -f "./UTLib/shared/utlIntegrator.lua" ]; then
+	DIRS=./*/
+	echo "Parsing Modules"
+	for dir in $DIRS
+	do
+		if [ ! -d "$dir/shared/" ]; then
+			echo "Creating shared directory in $dir"
+			mkdir "$dir/shared/"
+		fi
+		echo "Linking Integrator to $dir/shared/utlIntegrator.lua"
+		if [ -f "$dir/shared/utlIntegrator.lua" ]; then
+			echo "  ! Integrator already exists here..."
+		else
+			ln "./UTLib/shared/utlIntegrator.lua" "$dir/shared/utlIntegrator.lua"
+		fi
+	done
+fi

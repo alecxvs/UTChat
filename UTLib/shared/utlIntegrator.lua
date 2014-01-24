@@ -20,7 +20,6 @@ function utliChat(c_class, x1, x2, x3)
 	Events:Fire("UTLClientEvent", {name = "PrintChat", args = args})
 end
 Events:Subscribe("ModuleLoad", function()
-	if UTLib then return end
 	if Client then
 			print("Integrated Client")
 			Chat.Print = utliChat

@@ -17,27 +17,40 @@ Events:Subscribe("UTChatLoaded", function( )
 		if not formats then formats = {} end
 		local str = utxt.text
 		::redo::
-		local startindex, color = str:match("()%((%a-)%)")
+		local startindex, tagtype, tagparams, endindex = str:match(".-()%[(%a-)=?(.-)%].-()%[/%2%]")
 		do
-			if not startindex or not color then goto final end
-			local taglength = 2+#color
-			if UText.SupportedFormats[color:lower()] then
-				local pass, fmt = pcall(UText.SupportedFormats[color:lower()], startindex, #utxt.text, )
+			if not startindex or not tagtype or not tagparams or not endindex then goto final end
+			local taglength = 2+#tagtype
+			if tagparams and tagparams != "" then taglength = taglength + 1 + #tagparams end
+			if UText.SupportedFormats[tagtype:lower()] then
 				
-				local function tchelper(first, rest)
-				  return first:upper()..rest:lower()
+				local paramtable = {}
+				local paramiter = string.gmatch(tagparams,"%p?(%-?%w+)")
+				for p in paramiter do
+					local num = tonumber(p)
+					if num then p = num end
+					table.insert(paramtable,p)
 				end
-				color = color:gsub("(%a)([%w_']*)", tchelper)
+				paramtable.n = #paramtable
+				local pass, fmt = pcall(UText.SupportedFormats[tagtype:lower()], startindex, endindex-1, paramtable)
+				
 				
 				if pass then
-					local scrape = {startindex, startindex+taglength-1}
+					local scrape = {{startindex, startindex+taglength-1},{endindex,endindex+2+#tagtype}}
 					table.insert(formats, fmt)
 					for i,f in ipairs(formats) do
 						if f.endpos > startindex then
-							local offset = scrape[2] - scrape[1] + 1
+							local offset = scrape[1][2] - scrape[1][1] + 1
 							f.endpos = f.endpos - offset
 							if f.startpos > startindex then
 								f.startpos = f.startpos - offset
+							end
+							if f.endpos > endindex then
+								offset = scrape[2][2] - scrape[2][1] + 1
+								f.endpos = f.endpos - offset
+								if f.startpos > endindex then
+									f.startpos = f.startpos - offset
+								end
 							end
 						end
 					end
@@ -46,9 +59,9 @@ Events:Subscribe("UTChatLoaded", function( )
 				end
 			end
 			local strcheck = str
-			str = str:gsub("(.-)%("..escape(color).."%)(.-)","%1%2")
+			str = str:gsub("(.-)%["..escape(tagtype).."=?"..escape(tagparams).."%](.-)%[/"..escape(tagtype).."%]","%1%2")
 			if strcheck == str then
-				error("Attempted to gsub (.-)%("..escape(color).."%)(.-)","%1%2")
+				error("Attempted to gsub (.-)%["..escape(tagtype).."=?"..escape(tagparams).."%](.-)%[/"..escape(tagtype).."%]")
 			else
 				goto redo
 			end

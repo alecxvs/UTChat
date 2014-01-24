@@ -100,10 +100,11 @@ Events:Subscribe( "UTLibLoaded", function()
 	-- Motion Effect Render
 	UTLib.Motion.Render =
 	function( block, effect )
-		if os.clock() == effect.clock then block.position = (block.vposition + effect.vec) return else effect.clock = os.clock() end
+		if os.clock() == effect.clock then block.position = (block.vposition + effect.vec) return end
 		if not effect.init then
 			effect.StartTime = os.clock() + effect.StartTime
 			block.vposition = block.position + effect.Offset
+			effect.clock = os.clock()
 			effect.init = true
 		end
 		if not effect.global then

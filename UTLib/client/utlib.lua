@@ -23,15 +23,9 @@ function UTLib.LoadModule( tbl )
 			mod.External = pcall(function() return mod.External end)
 		end
 		local modname = mod.ModuleClass
-		
-		local trebuchet = {}
 		for i,obj in ipairs(mod.ModuleDependencies) do
-			if obj:find(".lua") or obj:find(".luo") then
-				trebuchet[obj] = UTLib.FetchFile(obj)
-				if trebuchet[obj] then trebuchet.n = (trebuchet.n or 0) + 1 end
-			elseif not UTL[obj] then goto failed end
+			if not UTL[obj] then goto failed end
 		end
-		
 		if not mod.External then
 			UTL[modname] = mod()
 			if mod.ModuleName then modname = mod.ModuleName end

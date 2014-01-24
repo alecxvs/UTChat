@@ -10,16 +10,10 @@ UTChat.Messages = {}
 UTChat.ChatHandlers = {}
 local paused = false
 local loaded = false
-local hidden = false
-local keydown = {}
-local renderchunk
-
 function UTChat:__init()
 	self.Messages = {}
 	self.ChatHandlers = {n = 0}
-	Events:Subscribe( "PostRender", self, self.Render )
-	Events:Subscribe( "KeyDown", self, self.KeyDown )
-	Events:Subscribe( "KeyUp", self, self.KeyUp )
+	Events:Subscribe( "Render", self, self.Render )
 	Events:Subscribe( "PrintChat", self, self.PrintChat )
 	Events:Subscribe("UTChatDisable", self, self.Disable )
 	self:Enable()
@@ -27,6 +21,7 @@ function UTChat:__init()
 end
 
 function UTChat:Enable()
+
 	events = {
 		Events:Subscribe( "PlayerChat", self, self.OnPlayerChat )
 	}
@@ -72,12 +67,11 @@ function UTChat:PostMessage( utxt )
 	
 	::skip::
 	for i=1,15 do Chat:Print("",Color(0,0,0,0)) end
-	utxt:Format( "motion", true, 0, 0.3, {Vector2(0, 20),Vector2(0, -20)}, Easing.outSine)
-	utxt:Format( "fade", true, 0, 0.3, 0, 255)
+	utxt:Format( "motion", true, 0, 0.4, {Vector2(0, 20),Vector2(0, -20)}, Easing.outSine)
+	utxt:Format( "fade", true, 0, 0.4, 0, 255)
 	utxt:Format( "shadow", 1, #utxt.text, -1, -1, 150 )
 	utxt.finalcallback = function( ut ) table.remove(self.Messages,ut.MessageID) end
-	if paused then utxt.alpha = utxt.alpha * 0.50 end
-	if hidden then utxt.alpha = 0 end
+	if paused then utxt.alpha = utxt.alpha * 0.80 end
 	table.insert(self.Messages, 1, utxt)
 	
 	for ix,m in ipairs(self.Messages) do
@@ -95,28 +89,30 @@ function UTChat:PostMessage( utxt )
 				m:SetDuration(0.1)
 			else
 				local msgremainder = (msgs_visible-msgs_fade)
-				m.alpha = (((((-(ix-msgs_fade) * (ix-msgs_fade))/msgremainder + msgremainder))/msgremainder)*(paused and 255*0.5 or 255))
+				m.alpha = (((((-(ix-msgs_fade) * (ix-msgs_fade))/msgremainder + msgremainder))/msgremainder)*(paused and 255*0.80 or 255))
 			end
 		end
 	end
 end
 
 function UTChat:OnPlayerChat( args )
-	if args.utlignore then return true end
+	if args.utlignore or args.color and args.color.a <= 0 then return true end
 	if args.text:sub(1,1) == "/" then
 		args.utlignore = true
 		Events:Fire("PlayerChat", args)
 		return false
 	end
-	--local namefiller = ""
-	
-	--for i=1,#args.player:GetName() do namefiller = namefiller .. "." end
-	--utxt = UText(namefiller .. ": " .. args.text,Vector2(30,(Render.Height*0.80)))
-	utxt = UText(args.player:GetName() .. ": " .. args.text,Vector2(30,(Render.Height*0.80)))
+	local namefiller = ""
+	for i=1,#args.player:GetName() do namefiller = namefiller .. "." end
+	utxt = UText(namefiller .. ": " .. args.text,Vector2(30,(Render.Height*0.80)))
 	math.randomseed(FNV(args.player:GetName()))
 	utxt:Format( "color", 1, #( args.player:GetName() ) + 1,Color( 150 + math.random( 100 ), 150 + math.random( 100 ), 150 + math.random( 100 ) ) )
+	--utxt:Prioritize("motion","shadow")
 	self:PostMessage(utxt)
-	--utxt.text = self.Messages[1].text:gsub("%.-(:.*)",args.player:GetName().."%1")
+	print("posted")
+	print(utxt.text)
+	utxt.text = self.Messages[1].text:gsub("%.-(:.*)",args.player:GetName().."%1")
+	print(utxt.text)
 	return false
 end
 
@@ -135,28 +131,9 @@ function UTChat:PrintChat( args )
 	self:PostMessage(utxt)
 end
 
-function UTChat:KeyDown( args )
-	if args.key == 114 and not keydown[114] then
-		hidden = not hidden
-		for i,m in ipairs(self.Messages) do
-			local alp = hidden and 0 or m.oldalpha
-			if hidden then m.oldalpha = m.alpha end
-			m:Format("fade", true, 0, 0.5, m.alpha, alp, Easing.inOutQuad, {Override = true, Terminate = not hidden})
-			m:Optimize()
-		end
-	end
-	
-	keydown[args.key] = true
-end
-
-function UTChat:KeyUp( args )
-	keydown[args.key] = false
-end
-
 function UTChat:Render( args ) -- Render Hook
-	
 	if paused != (Game:GetState() != GUIState.Game) then
-		for i,m in ipairs(self.Messages) do m.alpha = m.alpha * (paused and 2 or 0.50) end
+		for i,m in ipairs(self.Messages) do m.alpha = m.alpha * (paused and 1.25 or 0.80) end
 		paused = (Game:GetState() != GUIState.Game)
 	end
 	
