@@ -33,7 +33,7 @@
 		
 		self.lifetime = 0
 		self.alpha = 255
-		self.color = Color(255,255,255,255)
+		self.color = Color.White
 		
 		self.textsize = 16
 		self.scale = 1
@@ -63,6 +63,48 @@
 	end
 
 	
+----:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::----
+--:::::::::::					User Access Function					:::::::::::::--
+----:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::----
+
+
+	--Returns the text
+	function UText:GetText()
+		return self.text
+	end
+
+	--Modifies the text (be mindful of existing format tags)
+	--                    (string)
+	function UText:SetText(text) 
+		assert(text,"UText Error: SetText parameter 'text' is required -- was nil")
+		self.text = text
+		self:Optimize()
+	end
+
+	--Returns the duration of the visibility of UText
+	function UText:GetDuration() 
+		return self.lifetime
+	end
+
+	--- Sets the duration of the visibility of UText
+	--- Takes a number, optional boolean where if true, the text's lifespan is not restarted to the current time
+	--						  (number,   boolean)
+	function UText:SetDuration(duration, noReset) 
+		assert(type(duration) == "number","UText Error: Invalid parameter to SetDuration -- requires a number, got "..type(duration))
+		self.lifetime = duration
+		if noReset then
+			self.endTime = self.startTime+self.lifetime
+		else
+			self.startTime = os.clock()
+			self.endTime = os.clock()+self.lifetime
+		end
+	end
+	
+----:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::----
+--:::::::::::		Internal Functions (Format, Optimize, Render)		:::::::::::::--
+----:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::----
+	
+	
 	function UText:__insertfmt(fmt, global)
 		if global then
 			fmt.global = true
@@ -76,7 +118,7 @@
 	--- Takes a string as the name of the format to be applied
 	--- Unofficial/Unregistered formats can be used given the optional callback FormatCode
 	--- (Advanced users can also input an initialized Format table as the only parameter)
-	function UText:Format(Format, ...)
+	function UText:Format(Format, ...) 
 	--					 (string, number, number, <function>)
 	--					 (string, boolean, <function>)
 	--					 (table)
@@ -85,7 +127,7 @@
 		self.optimized = false
 		local global = false
 		local fmtfunction, startindex, endindex
-		local paramindex = 3
+		local paramindex = 3 
 		
 		if type(select(1,...)) == "boolean" then
 			global = true
@@ -125,39 +167,6 @@
 			self:__insertfmt(fmtfunction(startindex, endindex, argbuilder), global)
 		end
 	end
-
-	--Returns the text
-	function UText:GetText()
-		return self.text
-	end
-
-	--Modifies the text (be mindful of existing format tags)
-	function UText:SetText(text) 
-	--                    (string)
-		assert(text,"UText Error: SetText parameter 'text' is required -- was nil")
-		self.text = text
-		self:Optimize()
-	end
-
-	--Returns the duration of the visibility of UText
-	function UText:GetDuration() 
-		return self.lifetime
-	end
-
-	--- Sets the duration of the visibility of UText
-	--- Takes a number, optional boolean where if true, the text's lifespan is not restarted to the current time
-	function UText:SetDuration(duration, noReset) 
-	--						  (number,   boolean)
-		assert(type(duration) == "number","UText Error: Invalid parameter to SetDuration -- requires a number, got "..type(duration))
-		self.lifetime = duration
-		if noReset then
-			self.endTime = self.startTime+self.lifetime
-		else
-			self.startTime = os.clock()
-			self.endTime = os.clock()+self.lifetime
-		end
-	end
-
 
 	-- Runs optimization on a UText object.
 	-- This is only necessary if the format table or text was changed.
@@ -207,7 +216,7 @@
 				end
 			end
 			
-			block.color 	= self.color or Color(255,255,255,math.floor(self.alpha+0.5))
+			block.color 	= self.color or Color.White
 			block.textsize 	= self.textsize
 			block.scale 	= self.scale
 			block.position 	= self.position
@@ -234,7 +243,8 @@
 		
 		for i,block in ipairs(self.__strtable) do
 			block.position=self.position+Vector2(xoffset,0)
-			local corrected_color = Color(self.color.r,self.color.g,self.color.b,self.color.a*(self.alpha/255))
+			local corrected_color = self.color
+			corrected_color.a = corrected_color.a*(self.alpha/255)
 			block.color = corrected_color
 			if block.formats then
 				for k,fmt in pairs(block.formats) do
@@ -242,7 +252,8 @@
 				end
 				xoffset=xoffset+Render:GetTextWidth(block.text,block.textsize,block.scale)
 
-				corrected_color = Color(block.color.r,block.color.g,block.color.b,(block.alpha or block.color.a)*(self.color.a*(self.alpha/255)/255))				
+				corrected_color = block.color				
+				block.color.a = (block.alpha or block.color.a)*(self.color.a*(self.alpha/255)/255)
 			end
 			Render:DrawText( block.position, block.text, corrected_color, block.textsize, block.scale )
 			::noblock::
