@@ -81,6 +81,43 @@
 		self:Optimize()
 	end
 
+	function UText:InsertText(str, index)
+		self.text = self.text:sub(1,index-1) .. str .. self.text:sub(index)
+		for i,f in ipairs(self.formats) do
+			if f.endpos > index then
+				f.endpos = f.endpos + #str
+				if f.startpos > index then
+					f.startpos = f.startpos + #str
+				end
+			end
+		end
+	end
+	
+	function UText:RemoveText(first, index)
+		if type(first) == "number" then
+			local firstindex, lastindex = first,index
+			local length = lastindex - firstindex + 1
+			
+			self.text = self.text:sub(1,firstindex-1) .. self.text:sub(lastindex+1)
+			
+			for i,f in ipairs(self.formats) do
+				if f.endpos > index then
+					f.endpos = f.endpos - length
+					if f.startpos > index then
+						f.startpos = f.startpos - length
+					end
+				end
+			end
+		elseif type(first) == "string" then
+			local str = first
+			local i = self.text:match(str)
+			if i and i > 0 then self:RemoveText(i,#str-1) end
+			return i
+		else
+			error("UText Error: RemoveText expected (firstindex, lastindex) or (string, index)")
+		end
+	end	
+	
 	--Returns the duration of the visibility of UText
 	function UText:GetDuration() 
 		return self.lifetime
