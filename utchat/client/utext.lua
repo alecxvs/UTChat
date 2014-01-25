@@ -253,11 +253,12 @@
 				end
 			end
 			
-			block.color 	= self.color or Color.White
+			block.color 	= Color.White
 			block.textsize 	= self.textsize
 			block.scale 	= self.scale
 			block.position 	= self.position
 			block.parent 	= self
+			block.alpha		= 255
 			
 			pos = pos + block.length
 			
@@ -280,7 +281,7 @@
 		
 		for i,block in ipairs(self.__strtable) do
 			block.position=self.position+Vector2(xoffset,0)
-			local corrected_color = self.color
+			local corrected_color = Copy(self.color)
 			corrected_color.a = corrected_color.a*(self.alpha/255)
 			block.color = corrected_color
 			if block.formats then
@@ -288,9 +289,8 @@
 					fmt.renderfunc(block, fmt)
 				end
 				xoffset=xoffset+Render:GetTextWidth(block.text,block.textsize,block.scale)
-
-				corrected_color = block.color				
-				block.color.a = (block.alpha or block.color.a)*(self.color.a*(self.alpha/255)/255)
+				corrected_color = block.color
+				corrected_color.a = corrected_color.a*(block.alpha*(self.color.a*(self.alpha/255)/255)/255)
 			end
 			Render:DrawText( block.position, block.text, corrected_color, block.textsize, block.scale )
 			::noblock::

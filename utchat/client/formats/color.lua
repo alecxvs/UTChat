@@ -34,7 +34,7 @@ Events:Subscribe( "UTLibLoaded", function()
 		local ueColor = {}
 		
 		if (class_info(pColor).name):lower() == "color" then
-			ueColor.color = pColor
+			ueColor.color = Copy(pColor)
 		else
 			error( [[UTLib: Error in Color effect: Does not match overloads.
 					Expected: Color (Color)
@@ -50,7 +50,7 @@ Events:Subscribe( "UTLibLoaded", function()
 
 	--Color Effect Render
 	UTLib.Color.Render = function( block, effect )
-		block.color = effect.color
+		block.color = Copy(effect.color)
 	end
 	
 	UText.RegisterFormat( "color", UTLib.Color.Init )

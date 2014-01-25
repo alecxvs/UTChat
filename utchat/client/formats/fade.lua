@@ -100,7 +100,6 @@ Events:Subscribe( "UTLibLoaded", function()
 		
 		if effect.StartTime <= os.clock() and os.clock() <= timeEnd then
 			effect.alpha = effect.Func(timeElapsed, effect.StartAlpha, effect.EndAlpha, effect.Duration)
-			print(effect.StartAlpha," ~ ",effect.alpha," ~ ",effect.EndAlpha)
 		elseif effect.StartTime > os.clock() then
 			effect.alpha = effect.StartAlpha
 		end

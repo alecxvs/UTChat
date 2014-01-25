@@ -13,26 +13,14 @@ function UTLib.LoadModule( tbl )
 	::recheck::
 	for k=1,#UTLib.PendingModules do
 		local mod = UTLib.PendingModules[k]
-		if type(mod) == "table" then
-			mod.ModuleName = mod.ModuleName or "Unnamed Module"
-			mod.ModuleDependencies = mod.ModuleDependencies or {}
-			mod.External = mod.External or false
-		else
-			mod.ModuleName = pcall(function() if mod.ModuleName then return true end end) and mod.ModuleName or "Unnamed Module"
-			mod.ModuleDependencies = pcall(function() if mod.ModuleDependencies then return true end end) and mod.ModuleDependencies or {}
-			mod.External = pcall(function() return mod.External end)
-		end
+		mod.ModuleName = mod.ModuleName or "Unnamed Module"
+		mod.ModuleDependencies = mod.ModuleDependencies or {}
+		mod.External = mod.External or false
 		local modname = mod.ModuleClass
-		
-		local trebuchet = {}
 		for i,obj in ipairs(mod.ModuleDependencies) do
-			if obj:find(".lua") or obj:find(".luo") then
-				trebuchet[obj] = UTLib.FetchFile(obj)
-				if trebuchet[obj] then trebuchet.n = (trebuchet.n or 0) + 1 end
-			elseif not UTL[obj] then goto failed end
+			if not UTL[obj] then goto failed end
 		end
-		
-		if not mod.External then
+		if not mod.External or mod.External == false then
 			UTL[modname] = mod()
 			if mod.ModuleName then modname = mod.ModuleName end
 			print ("Loader: Loaded module "..modname)
@@ -84,7 +72,7 @@ function UTLib.TypeCheck( var, vartype, info )
 end
 
 function UTLib:__init()
-	--Events:Fire( "UTLibLoaded" )
+	Events:Fire( "UTLibLoaded" )
 end
 
 Events:Subscribe( "UTextLoaded", function()

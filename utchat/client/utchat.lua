@@ -109,7 +109,6 @@ function UTChat:OnPlayerChat( args )
 		return false
 	end
 	--local namefiller = ""
-	
 	--for i=1,#args.player:GetName() do namefiller = namefiller .. "." end
 	--utxt = UText(namefiller .. ": " .. args.text,Vector2(30,(Render.Height*0.80)))
 	utxt = UText(args.player:GetName() .. ": " .. args.text,Vector2(30,(Render.Height*0.80)))
@@ -167,4 +166,8 @@ function UTChat:Render( args ) -- Render Hook
 	end
 end
 
-Events:Subscribe( "UTLibLoaded", function() if not loaded then UTLib.LoadModule( UTChat ) end end)
+if UTLib then
+	UTLib.LoadModule( UTChat )
+else
+	Events:Subscribe( "ModuleLoad", function() if not loaded then UTLib.LoadModule( UTChat ) end end)
+end

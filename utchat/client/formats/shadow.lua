@@ -40,7 +40,7 @@ Events:Subscribe( "UTLibLoaded", function()
 	UTLib.Shadow.Render =
 	function( block, effect )
 		local scolor = block.color*effect.colormult
-		scolor.a = effect.alpha*(block.color.a*(math.floor(block.parent.alpha)/255)/255)
+		scolor.a = effect.alpha*(block.alpha*(block.parent.color.a*(block.parent.alpha/255)/255)/255)
 		Render:DrawText( block.position-Vector2(effect.xoffset,effect.yoffset), block.text, scolor, block.textsize, block.scale*effect.scale )
 	end
 	
