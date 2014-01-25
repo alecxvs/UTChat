@@ -3,12 +3,8 @@
 --Purpose:  Parse color constants and apply them to text
 --================================================================================--
 
-
-local loaded = false
-Events:Subscribe("UTChatLoaded", function( )
-	if loaded then return end
-	loaded = true
-	UTL["UTChat"]:RegisterChatHandler(function( utxt )
+Events:Subscribe("ModulesLoad", function( )
+	UTChat.RegisterChatHandler(function( utxt )
 		assert((class_info(utxt).name):lower() == "utext", "UTChat Tag Parser failed: Expecting UText object, got "..type(utxt)..": "..(class_info(pColor).name):lower())
 		::redo::
 		local startindex, color = utxt.text:match("()%(([%a%s]+)%).+")

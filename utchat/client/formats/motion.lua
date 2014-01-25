@@ -4,7 +4,6 @@ Motion Effect
 	- type = "Motion"
 	- startpos = <number>
 	- endpos = <number>
-	- renderfunc = UTLib.Motion.Render
   *Custom Parameter*
 	* Motion = args[1-5]
 		StartTime = number (From the creation of the UText)
@@ -25,24 +24,25 @@ Motion Effect
 		yOffset = number
 		Func = function (Easing function)
 ]]--
-local loaded = false
-Events:Subscribe( "UTLibLoaded", function()
-	if loaded then return end
-	loaded = true
-	
-	function UText.MoveTo(utxt, position, ...)
-		utxt:Move(position - utxt.position, ...)
+
+
+Events:Subscribe( "ModulesLoad", function()
+	function UText:MoveTo(position, ...)
+		print("Move to ",position.x," ",position.y)
+		self:Move(position - self.position, ...)
 	end
-	function UText.Move(utxt, offset, duration, func)
-		utxt:Format("motion",true,0,duration or 1,offset,func or Easing.linear)
+	function UText:Move(offset, duration, func)
+		self:Format("motion",true,0,duration or 1,offset,func or Easing.linear)
 	end
-	
-	UTLib.Motion = {}
+
+	UText.RegisterFormat( Motion, "motion" )
+end)
+
+class 'Motion'
 
 	-- Motion Effect Init
-	UTLib.Motion.Init =
-	function( startpos, endpos, params )
-		local ueMotion = {}
+	function Motion:__init( startpos, endpos, params )
+		Format.__init(self, startpos, endpos)
 		local StartTime, Duration, Offset, Func, Extra = table.unpack(params)
 		assert(StartTime and Duration and Offset,"UTLib: Error in Motion effect: Required parameters incomplete (Start Time, Duration, Offset)")
 		assert(type(Offset) == "table" or class_info(Offset).name:lower() == "vector2" or type(Offset) == "number" and type(Func) == "number", "UTLib: Error in Motion effect: Offset must be Vector2 or two numbers")
@@ -61,90 +61,84 @@ Events:Subscribe( "UTLibLoaded", function()
 				end
 			end
 			if type(Offset) == "table" then
-				ueMotion.Offset = Offset[1]
+				self.Offset = Offset[1]
 				Offset = Offset[2]
 			end
 		end
 
-		ueMotion.type			= "Motion"
-		ueMotion.startpos		= startpos
-		ueMotion.endpos			= endpos
-		ueMotion.renderfunc		= UTLib.Motion.Render
-
-		ueMotion.StartTime		= StartTime
-		ueMotion.Duration		= Duration
-		ueMotion.Offset 		= ueMotion.Offset or Vector2(0,0)
-		ueMotion.MoveOffset		= Offset
-		ueMotion.Func			= Func or Easing.linear
-		ueMotion.RepeatDelay	= 0 or Extra.RepeatDelay
-		ueMotion.Rewind			= Extra.Rewind
+		self.StartTime		= StartTime
+		self.Duration		= Duration
+		self.Offset 		= self.Offset or Vector2(0,0)
+		self.MoveOffset		= Offset
+		self.Func			= Func or Easing.linear
+		self.RepeatDelay	= 0 or Extra.RepeatDelay
+		self.Rewind			= Extra.Rewind
 		
 		if Extra.Repeat == true or Extra.Repeat == 1 then
-			ueMotion.Repetitions	= 0
-			ueMotion.Repeat 		= true
+			self.Repetitions	= 0
+			self.Repeat 		= true
 	elseif Extra.Repeat and Extra.Repeat > 1 then
-			ueMotion.Repetitions 	= Extra.Repeat
-			ueMotion.Repeat 		= true
+			self.Repetitions 	= Extra.Repeat
+			self.Repeat 		= true
 		else
-			ueMotion.Repetitions 	= 1
-			ueMotion.Repeat 		= false
+			self.Repetitions 	= 1
+			self.Repeat 		= false
 		end
 		
-		ueMotion.Actual = Extra.Actual or false
+		self.Actual = Extra.Actual or false
 		
 
-		UTLib.TypeCheck({StartTime,Duration,ueMotion.Repetitions,ueMotion.RepeatDelay}, "number", "In Motion format initialization")
-		return ueMotion
+		if not (type(StartTime)			== "number" and
+				type(Duration)			== "number" and
+				type(self.Repetitions) 	== "number" and
+				type(self.RepeatDelay) 	== "number") then
+			error("Motion format expected numeric parameters") end
 	end
 
 	-- Motion Effect Render
-	UTLib.Motion.Render =
-	function( block, effect )
-		if os.clock() == effect.clock then block.position = (block.vposition + effect.vec) return else effect.clock = os.clock() end
-		if not effect.init then
-			effect.StartTime = os.clock() + effect.StartTime
-			block.vposition = block.position + effect.Offset
-			effect.init = true
+	function Motion:Render( block )
+		if os.clock() == self.clock then block.position = (block.vposition + self.vec) return else self.clock = os.clock() end
+		if not self.init then
+			self.StartTime = os.clock() + self.StartTime
+			block.vposition = block.position + self.Offset
+			self.init = true
 		end
-		if not effect.global then
+		if not self.global then
 			block.vposition = block.position
 		end
 		
 		local timeElapsed
-		local timeEnd = effect.StartTime + effect.Duration
+		local timeEnd = self.StartTime + self.Duration
 		
-		if effect.rewinding then
-			timeElapsed = (os.clock() - (os.clock() - effect.StartTime)*2) - (effect.StartTime - effect.Duration)
+		if self.rewinding then
+			timeElapsed = (os.clock() - (os.clock() - self.StartTime)*2) - (self.StartTime - self.Duration)
 		else
-			timeElapsed = os.clock() - effect.StartTime
+			timeElapsed = os.clock() - self.StartTime
 		end
 		
-		if effect.StartTime <= os.clock() and os.clock() <= timeEnd then
-			effect.vec = Vector2(
-			effect.MoveOffset.x != 0 and
-			  effect.Func(timeElapsed, 0, effect.MoveOffset.x, effect.Duration) or 0 ,
-			effect.MoveOffset.y != 0 and
-			  effect.Func(timeElapsed, 0, effect.MoveOffset.y, effect.Duration) or 0 )
-			block.position = block.vposition + effect.vec
+		if self.StartTime <= os.clock() and os.clock() <= timeEnd then
+			self.vec = Vector2(
+			self.MoveOffset.x != 0 and
+			  self.Func(timeElapsed, 0, self.MoveOffset.x, self.Duration) or 0 ,
+			self.MoveOffset.y != 0 and
+			  self.Func(timeElapsed, 0, self.MoveOffset.y, self.Duration) or 0 )
+			block.position = block.vposition + self.vec
 		end
 		if os.clock() >= timeEnd then
-			if not effect.Rewind or effect.Rewind and effect.rewinding then
-				effect.rewinding = false
-				if effect.Repetitions > 0 then
-					effect.Repetitions = effect.Repetitions - 1
-					effect.Repeat = effect.Repetitions > 0
+			if not self.Rewind or self.Rewind and self.rewinding then
+				self.rewinding = false
+				if self.Repetitions > 0 then
+					self.Repetitions = self.Repetitions - 1
+					self.Repeat = self.Repetitions > 0
 				end
-				if effect.Repeat then
-					effect.StartTime = timeEnd + effect.RepeatDelay
+				if self.Repeat then
+					self.StartTime = timeEnd + self.RepeatDelay
 				end
-				block.position = block.vposition + effect.vec
+				block.position = block.vposition + self.vec
 			else
-				effect.rewinding = true
-				effect.StartTime = timeEnd
+				self.rewinding = true
+				self.StartTime = timeEnd
 				block.position = block.vposition
 			end
 		end
 	end
-
-	UText.RegisterFormat( "motion", UTLib.Motion.Init )
-end)

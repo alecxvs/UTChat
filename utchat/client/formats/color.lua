@@ -4,7 +4,6 @@ Color Effect
 	- type = "Color"
 	- startpos = <number>
 	- endpos = <number>
-	- renderfunc = UTLib.Color.Render
   *Custom Parameter*
 	* color = args[1-4]
 		Overloads:
@@ -12,14 +11,13 @@ Color Effect
 		Conforms to constructors of the Color class, see the JC2-MP Wiki for details:
 		  http://wiki.jc-mp.com/Lua/Shared/Color/Constructor
 ]]--
-local loaded = false
-Events:Subscribe( "UTLibLoaded", function()
-	if loaded then return end
-	loaded = true
-	UTLib.Color = {}
+Events:Subscribe( "ModulesLoad", function()
 	
 	--Color Effect Init
-	UTLib.Color.Init = function( startpos, endpos, params )
+	class 'utColor'
+	
+	function utColor:__init( startpos, endpos, params )
+		Format.__init(self, startpos, endpos)
 		local pColor = {}
 		if params then
 			if params.n == 1 then
@@ -31,28 +29,19 @@ Events:Subscribe( "UTLibLoaded", function()
 			error( "UTLib: Error in Color effect: This effect requires parameters, see documentation" )
 		end
 		
-		local ueColor = {}
-		
 		if (class_info(pColor).name):lower() == "color" then
-			ueColor.color = Copy(pColor)
+			self.color = Copy(pColor)
 		else
 			error( [[UTLib: Error in Color effect: Does not match overloads.
 					Expected: Color (Color)
 					Got: ]]..type(pColor) )
 		end
-		
-		ueColor.type = "color"
-		ueColor.startpos = startpos
-		ueColor.endpos = endpos
-		ueColor.renderfunc = UTLib.Color.Render
-		return ueColor
 	end
 
 	--Color Effect Render
-	UTLib.Color.Render = function( block, effect )
-		block.color = Copy(effect.color)
+	function utColor:Render( block )
+		block.color = Copy(self.color)
 	end
 	
-	UText.RegisterFormat( "color", UTLib.Color.Init )
-	UText.RegisterFormat( "colour", UTLib.Color.Init )
+	UText.RegisterFormat( utColor, "color", "colour" )
 end)

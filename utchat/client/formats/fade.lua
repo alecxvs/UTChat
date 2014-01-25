@@ -4,7 +4,6 @@ Fade Effect
 	- type = "Fade"
 	- startpos = <number>
 	- endpos = <number>
-	- renderfunc = UTLib.Fade.Render
   *Custom Parameter*
 	* Fade = args[1-6]
 		StartTime = number (From the creation of the UText)
@@ -17,16 +16,12 @@ Fade Effect
 			RepeatDelay = number
 			Rewind = boolean (rewind the animation after playing)
 ]]--
-local loaded = false
-Events:Subscribe( "UTLibLoaded", function()
-	if loaded then return end
-	loaded = true
-	UTLib.Fade = {}
+Events:Subscribe( "ModulesLoad", function()
+	class 'Fade'
 
 	-- Fade Effect Init
-	UTLib.Fade.Init =
-	function( startpos, endpos, params )
-		local ueFade = {}
+	function Fade:__init( startpos, endpos, params )
+		Format.__init(self, startpos, endpos)
 		local StartTime, Duration, StartAlpha, EndAlpha, Func, Extra = table.unpack(params)
 		assert(StartTime and Duration and StartAlpha and EndAlpha,"UTLib: Error in Fade effect: Parameters incomplete (Start Time, Duration, StartAlpha, EndAlpha)")
 		if Func then
@@ -41,93 +36,92 @@ Events:Subscribe( "UTLibLoaded", function()
 			Extra = {}
 		end
 
-
-		ueFade.type			= "Fade"
-		ueFade.startpos		= startpos
-		ueFade.endpos		= endpos
-		ueFade.renderfunc	= UTLib.Fade.Render
-
-		ueFade.StartTime	= StartTime
-		ueFade.Duration		= Duration
-		ueFade.StartAlpha 	= StartAlpha
-		ueFade.EndAlpha		= EndAlpha
-		ueFade.Func			= Func or Easing.linear
-		ueFade.RepeatDelay	= Extra.RepeatDelay or 0
-		ueFade.Rewind		= Extra.Rewind
-		ueFade.AccessParent	= Extra.Override
-		ueFade.Terminate   = Extra.Terminate
+		self.StartTime	= StartTime
+		self.Duration		= Duration
+		self.StartAlpha 	= StartAlpha
+		self.EndAlpha		= EndAlpha
+		self.Func			= Func or Easing.linear
+		self.RepeatDelay	= Extra.RepeatDelay or 0
+		self.Rewind		= Extra.Rewind
+		self.AccessParent	= Extra.Override
+		self.Terminate   = Extra.Terminate
 		
 		if Extra.Repeat == true or Extra.Repeat == 1 then
-			ueFade.Repetitions	= 0
-			ueFade.Repeat 		= true
+			self.Repetitions	= 0
+			self.Repeat 		= true
 	elseif Extra.Repeat and Extra.Repeat > 1 then
-			ueFade.Repetitions 	= Extra.Repeat
-			ueFade.Repeat 		= true
+			self.Repetitions 	= Extra.Repeat
+			self.Repeat 		= true
 		else
-			ueFade.Repetitions 	= 1
-			ueFade.Repeat 		= false
+			self.Repetitions 	= 1
+			self.Repeat 		= false
 		end
 		
 
-		UTLib.TypeCheck({StartTime,Duration,StartAlpha,EndAlpha,ueFade.Repetitions,ueFade.RepeatDelay}, "number", "In Fade format initialization")
-		return ueFade
+		if not (type(StartTime)			== "number" and
+				type(Duration)			== "number" and
+				type(StartAlpha)		== "number" and
+				type(EndAlpha)			== "number" and
+				type(self.Repetitions) 	== "number" and
+				type(self.RepeatDelay) 	== "number") then
+			error("Fade format expected numeric parameters") end
+		return self
 	end
 
 	-- Fade Effect Render
-	UTLib.Fade.Render =
-	function( block, effect )
+	function Fade:Render( block )
 		local timeElapsed, timeEnd
-		if os.clock() == effect.osclock then goto nocalc else effect.osclock = os.clock() end
-		if effect.StartAlpha > effect.EndAlpha then
-			effect.rewinding = true
-			effect.Rewind = true
-			local s = effect.StartAlpha
-			effect.StartAlpha = effect.EndAlpha
-			effect.EndAlpha = s
+		if os.clock() == self.osclock then goto nocalc else self.osclock = os.clock() end
+		if self.StartAlpha > self.EndAlpha then
+			self.rewinding = true
+			self.Rewind = true
+			local s = self.StartAlpha
+			self.StartAlpha = self.EndAlpha
+			self.EndAlpha = s
 		end
 		
-		if not effect.init then
-			effect.StartTime = os.clock() + effect.StartTime
-			effect.init = true
+		if not self.init then
+			self.StartTime = os.clock() + self.StartTime
+			self.init = true
 		end
-		timeEnd = effect.StartTime + effect.Duration
+		timeEnd = self.StartTime + self.Duration
 		
-		if effect.rewinding then
-			timeElapsed = (os.clock() - (os.clock() - effect.StartTime)*2) - (effect.StartTime - effect.Duration)
+		if self.rewinding then
+			timeElapsed = (os.clock() - (os.clock() - self.StartTime)*2) - (self.StartTime - self.Duration)
 		else
-			timeElapsed = os.clock() - effect.StartTime
+			timeElapsed = os.clock() - self.StartTime
 		end
 		
-		if effect.StartTime <= os.clock() and os.clock() <= timeEnd then
-			effect.alpha = effect.Func(timeElapsed, effect.StartAlpha, effect.EndAlpha, effect.Duration)
-		elseif effect.StartTime > os.clock() then
-			effect.alpha = effect.StartAlpha
+		if self.StartTime <= os.clock() and os.clock() <= timeEnd then
+			self.alpha = self.Func(timeElapsed, self.StartAlpha, self.EndAlpha, self.Duration)
+		elseif self.StartTime > os.clock() then
+			self.alpha = self.StartAlpha
 		end
 		if os.clock() >= timeEnd then
-			if not effect.Rewind or effect.Rewind and effect.rewinding then
-				if effect.Repetitions > 0 then
-					effect.Repetitions = effect.Repetitions - 1
-					effect.Repeat = effect.Repetitions > 0
+			if not self.Rewind or self.Rewind and self.rewinding then
+				if self.Repetitions > 0 then
+					self.Repetitions = self.Repetitions - 1
+					self.Repeat = self.Repetitions > 0
 				end
-				if effect.Repeat then
-					effect.StartTime = timeEnd + effect.RepeatDelay
-					effect.rewinding = false
+				if self.Repeat then
+					self.StartTime = timeEnd + self.RepeatDelay
+					self.rewinding = false
 				end
-				effect.alpha = effect.Rewind and effect.StartAlpha or effect.EndAlpha
-				if effect.Terminate then effect = nil return end
+				self.alpha = self.Rewind and self.StartAlpha or self.EndAlpha
+				if self.Terminate then self = nil return end
 			else
-				effect.rewinding = true
-				effect.StartTime = timeEnd
-				effect.alpha = effect.EndAlpha
+				self.rewinding = true
+				self.StartTime = timeEnd
+				self.alpha = self.EndAlpha
 			end
 		end
 		::nocalc::
-		if effect.AccessParent then
-			block.parent.alpha = effect.alpha
+		if self.AccessParent then
+			block.parent.alpha = self.alpha
 		else
-			block.color.a = effect.alpha
+			block.color.a = self.alpha
 		end
 	end
 
-	UText.RegisterFormat( "fade", UTLib.Fade.Init )
+	UText.RegisterFormat( Fade, "fade" )
 end)

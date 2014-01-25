@@ -1,48 +1,35 @@
 --UText Shadow Format--
 --[[
 Shadow Effect
-	- type = "Color"
+	- type = "Shadow"
 	- startpos = <number>
 	- endpos = <number>
-	- renderfunc = UTLib.Color.Render
   *Custom Parameter* 
 	* shadow = args[1-4]
 		X Offset = -1 (number), Y Offset = -1 (number), Alpha = 255 (number), Scale = 1 (number)
 ]]--
-local loaded = false
-Events:Subscribe( "UTLibLoaded", function()
-	if loaded then return end
-	loaded = true
-	UTLib.Shadow = {}
+
+Events:Subscribe( "ModulesLoad", function()
+	class 'Shadow'
 	
 	-- Shadow Effect Init
-	UTLib.Shadow.Init =
-	function( startpos, endpos, params )
-	
-		local ueShadow = {}
+	function Shadow:__init( startpos, endpos, params )
+		Format.__init(self, startpos, endpos)
 		local xoffset, yoffset, alpha, scale = table.unpack(params)
 		
-		ueShadow.type 		= "shadow"
-		ueShadow.startpos 	= startpos
-		ueShadow.endpos 	= endpos
-		ueShadow.renderfunc = UTLib.Shadow.Render
-		
-		ueShadow.xoffset 	= xoffset or -1
-		ueShadow.yoffset 	= yoffset or -1
-		ueShadow.alpha 		= alpha or 255
-		ueShadow.scale 		= scale or 1
-		ueShadow.colormult	= colormult or 0
-		
-		return ueShadow
+		self.xoffset 	= xoffset or -1
+		self.yoffset 	= yoffset or -1
+		self.alpha 		= alpha or 255
+		self.scale 		= scale or 1
+		self.colormult	= colormult or 0
 	end
 
 	-- Shadow Effect Render
-	UTLib.Shadow.Render =
-	function( block, effect )
-		local scolor = block.color*effect.colormult
-		scolor.a = effect.alpha*(block.alpha*(block.parent.color.a*(block.parent.alpha/255)/255)/255)
-		Render:DrawText( block.position-Vector2(effect.xoffset,effect.yoffset), block.text, scolor, block.textsize, block.scale*effect.scale )
+	function Shadow:Render( block )
+		local scolor = block.color * self.colormult
+		scolor.a = self.alpha*(block.alpha*(block.parent.color.a*(block.parent.alpha/255)/255)/255)
+		Render:DrawText( block.position - Vector2( self.xoffset, self.yoffset ), block.text, scolor, block.textsize, block.scale * self.scale )
 	end
 	
-	UText.RegisterFormat( "shadow", UTLib.Shadow.Init )
+	UText.RegisterFormat( Shadow, "shadow" )
 end)

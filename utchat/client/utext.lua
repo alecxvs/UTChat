@@ -1,6 +1,4 @@
-
---__ut = [[--UText--
-
+--UText.lua
 -- > The work in this file is licensed under the Microsoft Reciprocal License (MS-RL)
 -- > The license can be found in license.txt accompanying this file
 -- Copyright © Alec Sears ("SonicXVe") 2014
@@ -11,10 +9,12 @@
 
 	--- Registers a format for convenience (you don't have to supply callback
 	--- every time you use an unofficial format.)
-	function UText.RegisterFormat(Format, FormatCode)
-	--							 (string, function  )
+	function UText.RegisterFormat(fmt,   ...)
+	--							 (Format, string (names))
 		if not UText.SupportedFormats then UText.SupportedFormats = {} end
-		UText.SupportedFormats[Format:lower()] = FormatCode
+		for i,name in ipairs({...}) do
+			UText.SupportedFormats[name] = fmt
+		end
 	end
 
 	--- Constructor to the UText object
@@ -177,7 +177,7 @@
 		end
 		
 		if type(Format) == "table" and Format.type and Format.startpos
-										  and Format.endpos and Format.renderfunc then
+										  and Format.endpos then
 			self:__insertfmt(Format, global)
 			return
 		end
@@ -275,7 +275,7 @@
 
 		self.parent = self
 		for k,fmt in pairs(self.gformats) do
-			fmt.renderfunc(self, fmt)
+			fmt:Render(self)
 		end
 		self.parent = nil
 		
@@ -286,7 +286,7 @@
 			block.color = corrected_color
 			if block.formats then
 				for k,fmt in pairs(block.formats) do
-					fmt.renderfunc(block, fmt)
+					fmt:Render(block)
 				end
 				xoffset=xoffset+Render:GetTextWidth(block.text,block.textsize,block.scale)
 				corrected_color = block.color
@@ -304,11 +304,3 @@
 		end
 		return self
 	end
-
---	return UText
---]]
-
---init = load(__ut)
---UText = init()
-Events:Subscribe( "IsUTextLoaded", function() Events:Fire( "UTextLoaded" ) end)
-Events:Fire( "UTextLoaded" )

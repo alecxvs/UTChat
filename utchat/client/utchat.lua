@@ -3,43 +3,40 @@
 -- > The license can be found in license.txt accompanying this file
 -- Copyright © Alec Sears ("SonicXVe") 2014
 class 'UTChat'
-UTChat.ModuleName = "UTL Chat Manager"
-UTChat.ModuleClass = "UTChat"
-UTChat.ModuleDependencies = {"UTLib"}
-UTChat.Messages = {}
-UTChat.ChatHandlers = {}
 local paused = false
 local loaded = false
 local hidden = false
 local keydown = {}
-local renderchunk
+UTChat.ChatHandlers = {n=0}
+UTChat.Instances = {}
 
 function UTChat:__init()
 	self.Messages = {}
-	self.ChatHandlers = {n = 0}
+	if not UTChat.ChatHandlers then UTChat.ChatHandlers = {n = 0} end
 	Events:Subscribe( "PostRender", self, self.Render )
 	Events:Subscribe( "KeyDown", self, self.KeyDown )
 	Events:Subscribe( "KeyUp", self, self.KeyUp )
 	Events:Subscribe( "PrintChat", self, self.PrintChat )
 	Events:Subscribe("UTChatDisable", self, self.Disable )
+	table.insert(UTChat.Instances,self)
 	self:Enable()
 	loaded = true
 end
 
-function UTChat:Enable()
-	events = {
-		Events:Subscribe( "PlayerChat", self, self.OnPlayerChat )
-	}
+function UTChat.Enable()
+	for i,chat in pairs(UTChat.Instances) do
+		chat.eventPlayerChat = Events:Subscribe( "PlayerChat", chat, chat.OnPlayerChat )
+	end
 end
 
-function UTChat:Disable()
-	for i=1,#events do Events:Unsubscribe(events[i]) end
+function UTChat.Disable()
+	for i,chat in ipairs(UTChat.Instances) do Events:Unsubscribe(chat.eventPlayerChat) end
 end
 
-function UTChat:RegisterChatHandler( func, priority )
-	if not priority then priority = self.ChatHandlers.n + 1 end
-	self.ChatHandlers[priority]=func
-	if func then self.ChatHandlers.n = self.ChatHandlers.n + 1 end
+function UTChat.RegisterChatHandler( func, priority )
+	if not priority then priority = UTChat.ChatHandlers.n + 1 end
+	UTChat.ChatHandlers[priority]=func
+	if func then UTChat.ChatHandlers.n = UTChat.ChatHandlers.n + 1 end
 end
 
 function UTChat:PassthroughHandlers( utxt, handlers )
@@ -166,8 +163,7 @@ function UTChat:Render( args ) -- Render Hook
 	end
 end
 
-if UTLib then
-	UTLib.LoadModule( UTChat )
-else
-	Events:Subscribe( "ModuleLoad", function() if not loaded then UTLib.LoadModule( UTChat ) end end)
-end
+utchat = UTChat()
+Events:Subscribe("UTChatInstalled",function() utchat:Enable() end)
+Events:Subscribe("UTChatEnable", UTChat.Enable)
+Events:Subscribe("UTChatDisable", UTChat.Disable)
