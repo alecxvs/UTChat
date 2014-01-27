@@ -61,7 +61,11 @@
 			end
 		end
 	end
-
+	
+	
+local function escape(s)
+	return (s:gsub('[%-%.%+%[%]%(%)%$%^%%%?%*]','%%%1'):gsub('%z','%%z'))
+end
 	
 ----:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::----
 --:::::::::::					User Access Function					:::::::::::::--
@@ -101,21 +105,59 @@
 			self.text = self.text:sub(1,firstindex-1) .. self.text:sub(lastindex+1)
 			
 			for i,f in ipairs(self.formats) do
-				if f.endpos > index then
+				if f.endpos > lastindex then
 					f.endpos = f.endpos - length
-					if f.startpos > index then
+					if f.startpos > lastindex then
 						f.startpos = f.startpos - length
 					end
 				end
 			end
 		elseif type(first) == "string" then
 			local str = first
+			str = escape(str)
 			local i = self.text:match(str)
 			if i and i > 0 then self:RemoveText(i,#str-1) end
 			return i
 		else
 			error("UText Error: RemoveText expected (firstindex, lastindex) or (string, index)")
 		end
+	end	
+	
+	function UText:ReplaceText(text, repl)
+		text = escape(text)
+		print("^.-()"..text.."().*")
+		local firstindex, lastindex = self.text:match("^.-()"..text.."().*")
+		if not firstindex or not lastindex then return false end
+		local length = lastindex - firstindex + 1
+		local diff = #text - #repl
+		
+		self.text = self.text:gsub("(.-)"..text.."(.-)","%1"..repl.."%2")
+		
+		if diff != 0 then
+			local i = 1
+			::refresh::
+			while i <= #self.formats do
+				f = self.formats[i]
+				if f.startpos >= lastindex then
+					f.startpos = f.startpos + diff
+				elseif lastindex-diff < f.startpos then
+					f.startpos = lastindex + diff
+				end
+					
+				if f.endpos >= lastindex then
+					f.endpos = f.endpos + diff
+				elseif lastindex-diff < f.endpos then
+					f.endpos = lastindex + diff
+				end
+				
+				if f.endpos == f.startpos then
+					table.remove(self.formats,i)
+					goto refresh
+				end
+				i = i + 1
+			end
+		end
+		return true
 	end	
 	
 	--Returns the duration of the visibility of UText

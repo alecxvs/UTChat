@@ -28,7 +28,6 @@ Motion Effect
 
 Events:Subscribe( "ModulesLoad", function()
 	function UText:MoveTo(position, ...)
-		print("Move to ",position.x," ",position.y)
 		self:Move(position - self.position, ...)
 	end
 	function UText:Move(offset, duration, func)
