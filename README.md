@@ -5,10 +5,10 @@
 
 **Quick Links**:
 
-* [**Where to download**](https://bitbucket.org/SonicXVe/utlib/downloads)
-* [**How to install**](https://bitbucket.org/SonicXVe/utlib/wiki/UTChat%20for%20Server%20Operators)
-* [**What to code**](https://bitbucket.org/SonicXVe/utlib/wiki/UText%20Developer's%20Guide)
-* [**Compatibility**](https://bitbucket.org/SonicXVe/utlib/wiki/Compatibility%20with%20other%20modules)
+* [**Where to download**](https://github.com/alecxvs/UTChat/releases)
+* [**How to install**](https://github.com/alecxvs/UTChat/wiki/UTChat%20for%20Server%20Operators)
+* [**What to code**](https://github.com/alecxvs/UTChat/wiki/UText%20Developer's%20Guide)
+* [**Compatibility**](https://github.com/alecxvs/UTChat/wiki/Compatibility%20with%20other%20modules)
 
 ---
 
@@ -42,7 +42,7 @@ More information on each module:
 ---
 
 ## **For Developers**:
-Reference the [Developer's Guide here](https://bitbucket.org/SonicXVe/utlib/wiki/UText%20Developer's%20Guide)
+Reference the [Developer's Guide here](https://github.com/alecxvs/UTChat/wiki)
 
 Each module in UTLib (UTChat, UTLib, UText) allow for different types of utilization -- work with the one that best suits what you want to do!
 
