@@ -1,7 +1,7 @@
 --UTChat--
 -- > The work in this file is licensed under the Microsoft Reciprocal License (MS-RL)
 -- > The license can be found in license.txt accompanying this file
--- Copyright © Alec Sears ("SonicXVe") 2014
+-- Copyright ï¿½ Alec Sears ("SonicXVe") 2014
 class 'UTChat'
 local paused = false
 local loaded = false
@@ -66,9 +66,9 @@ function UTChat:PostMessage( utxt )
 	if utxt.nochathandling then goto skip end
 	utxt = self:PassthroughHandlers( utxt, self.ChatHandlers )
 	if not utxt then return end
-	
+
 	::skip::
-	for i=1,15 do Chat:Print("",Color(0,0,0,0)) end
+	for i=1,15 do Chat:Print("", Color(0,0,0,0)) end
 	utxt:Format( "motion", true, 0, 0.3, {Vector2(0, 20),Vector2(0, -20)}, Easing.outSine)
 	utxt:Format( "fade", true, 0, 0.3, 0, 255)
 	utxt:Format( "shadow", 1, #utxt.text, -1, -1, 150 )
@@ -76,7 +76,7 @@ function UTChat:PostMessage( utxt )
 	if paused then utxt.alpha = utxt.alpha * 0.50 end
 	if hidden then utxt.alpha = 0 end
 	table.insert(self.Messages, 1, utxt)
-	
+
 	for ix,m in ipairs(self.Messages) do
 		m.MessageID = ix
 		local pos = Vector2(30,(Render.Height*0.8)-((ix-1)/10*160))
@@ -86,7 +86,7 @@ function UTChat:PostMessage( utxt )
 			m:MoveTo(pos,0.3,Easing.outSine)
 			m:Optimize()
 		end
-		
+
 		if ix > msgs_fade then
 			if ix > msgs_removeafter then
 				m:SetDuration(0.1)
@@ -135,13 +135,13 @@ function UTChat:KeyDown( args )
 	if args.key == 114 and not keydown[114] then
 		hidden = not hidden
 		for i,m in ipairs(self.Messages) do
+			if hidden or not m.oldalpha then m.oldalpha = m.alpha end
 			local alp = hidden and 0 or m.oldalpha
-			if hidden then m.oldalpha = m.alpha end
 			m:Format("fade", true, 0, 0.5, m.alpha, alp, Easing.inOutQuad, {Override = true, Terminate = not hidden})
 			m:Optimize()
 		end
 	end
-	
+
 	keydown[args.key] = true
 end
 
@@ -150,12 +150,12 @@ function UTChat:KeyUp( args )
 end
 
 function UTChat:Render( args ) -- Render Hook
-	
+
 	if paused != (Game:GetState() != GUIState.Game) then
 		for i,m in ipairs(self.Messages) do m.alpha = m.alpha * (paused and 2 or 0.50) end
 		paused = (Game:GetState() != GUIState.Game)
 	end
-	
+
 	for i,m in ipairs(self.Messages) do
 		if i <= msgs_visible then
 			m:Render()
