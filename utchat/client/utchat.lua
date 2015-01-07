@@ -142,7 +142,7 @@ function UTChat:ToggleChat( enabled )
 end
 
 function UTChat:Render( args ) -- Render Hook
-	if Chat:GetUserEnabled() != chat_disabled then self:ToggleChat(Chat:GetUserEnabled()) end
+	if (Chat:GetUserEnabled() and Chat:GetEnabled()) != chat_disabled then self:ToggleChat(Chat:GetUserEnabled() and Chat:GetEnabled()) end
 	if paused != (Game:GetState() != GUIState.Game) then
 		for i,m in ipairs(self.Messages) do m.alpha = m.alpha * (paused and 2 or 0.50) end
 		paused = (Game:GetState() != GUIState.Game)
