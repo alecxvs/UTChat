@@ -5,7 +5,7 @@
 class 'UTChat'
 local paused = false
 local loaded = false
-local hidden = false
+local chat_disabled = false
 local keydown = {}
 UTChat.ChatHandlers = {n=0}
 UTChat.Instances = {}
@@ -14,8 +14,6 @@ function UTChat:__init()
 	self.Messages = {}
 	if not UTChat.ChatHandlers then UTChat.ChatHandlers = {n = 0} end
 	Events:Subscribe( "PostRender", self, self.Render )
-	Events:Subscribe( "KeyDown", self, self.KeyDown )
-	Events:Subscribe( "KeyUp", self, self.KeyUp )
 	Events:Subscribe( "PrintChat", self, self.PrintChat )
 	Events:Subscribe("UTChatDisable", self, self.Disable )
 	table.insert(UTChat.Instances,self)
@@ -74,7 +72,7 @@ function UTChat:PostMessage( utxt )
 	utxt:Format( "shadow", 1, #utxt.text, -1, -1, 150 )
 	utxt.finalcallback = function( ut ) table.remove(self.Messages,ut.MessageID) end
 	if paused then utxt.alpha = utxt.alpha * 0.50 end
-	if hidden then utxt.alpha = 0 end
+	if utchat_hidden then utxt.alpha = 0 end
 	table.insert(self.Messages, 1, utxt)
 
 	for ix,m in ipairs(self.Messages) do
@@ -131,26 +129,20 @@ function UTChat:PrintChat( args )
 	self:PostMessage(utxt)
 end
 
-function UTChat:KeyDown( args )
-	if args.key == 114 and not keydown[114] then
-		hidden = not hidden
-		for i,m in ipairs(self.Messages) do
-			if hidden or not m.oldalpha then m.oldalpha = m.alpha end
-			local alp = hidden and 0 or m.oldalpha
-			m:Format("fade", true, 0, 0.5, m.alpha, alp, Easing.inOutQuad, {Override = true, Terminate = not hidden})
-			m:Optimize()
+function UTChat:ToggleChat( enabled )
+	for i,m in ipairs(self.Messages) do
+		if not enabled and m.alpha == m.oldalpha or not m.oldalpha then
+			m.oldalpha = m.alpha
 		end
+		local end_alpha = enabled and m.oldalpha or 0
+		m:Format("fade", true, 0, 0.5, m.alpha, end_alpha, Easing.inOutQuad, {Override = true, Terminate = enabled})
+		m:Optimize()
 	end
-
-	keydown[args.key] = true
-end
-
-function UTChat:KeyUp( args )
-	keydown[args.key] = false
+	chat_disabled = enabled
 end
 
 function UTChat:Render( args ) -- Render Hook
-
+	if Chat:GetUserEnabled() != chat_disabled then self:ToggleChat(Chat:GetUserEnabled()) end
 	if paused != (Game:GetState() != GUIState.Game) then
 		for i,m in ipairs(self.Messages) do m.alpha = m.alpha * (paused and 2 or 0.50) end
 		paused = (Game:GetState() != GUIState.Game)
