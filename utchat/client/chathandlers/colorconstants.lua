@@ -10,17 +10,18 @@ Events:Subscribe("ModulesLoad", function( )
 		local startindex, color = utxt.text:match("()%(([%a%s]+)%).+")
 		do
 			if not startindex or not color then goto final end
-			
+
 			local function tchelper(first, rest)
 			  return first:upper()..rest:lower()
 			end
-			
-			local fcolor = color:gsub("(%a)([%w_']*)", tchelper):gsub("(.-)%s(.-)","%1%2")			
-			
+
+			local fcolor = color:gsub("(%a)([%w_']*)", tchelper):gsub("(.-)%s(.-)","%1%2")
+
+			utxt:RemoveText(startindex, startindex+#color+1)
 			if Color[fcolor] then
-				utxt:RemoveText(startindex, startindex+#color+1)
 				utxt:Format("color", startindex, #utxt.text, Color[fcolor])
 			end
+			
 			goto redo
 		end
 		::final::
