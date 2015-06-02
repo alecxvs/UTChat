@@ -5,20 +5,21 @@ end
 Events:Subscribe("ModuleLoad", function()
 	if UTLib then return end
 
-	local ptcMethod = function(player, text, color)
+	local pcMethod = function(text, color)
 		PrintChat({player = player, text = text, color = color or Copy(Color.White)})
 	end
 
-	local ctcMethod = function(_c, text, color)
+	local cpcMethod = function(_c, text, color)
 		PrintChat({text = text, color = color})
 	end
 
 	if Client then
-			Chat.Print = ctcMethod
+			Chat.Print = cpcMethod
 	end
+
 	if Server then
-			Chat.Send = ptcMethod
-			Chat.Broadcast = ctcMethod
-			Player.SendChatMessage = ptcMethod
+		Chat.Send = cpcMethod
+		Chat.Broadcast = pcMethod
+		Player.SendChatMessage = pcMethod
 	end
 end)
