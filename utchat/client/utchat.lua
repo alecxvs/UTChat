@@ -5,7 +5,7 @@
 class 'UTChat'
 local paused = false
 local loaded = false
-local chat_disabled = false
+local chat_enabled = false
 local keydown = {}
 UTChat.ChatHandlers = {n=0}
 UTChat.Instances = {}
@@ -67,12 +67,17 @@ function UTChat:PostMessage( utxt )
 
 	::skip::
 	for i=1,15 do Chat:Print("", Color(0,0,0,0)) end
+
 	utxt:Format( "motion", true, 0, 0.3, {Vector2(0, 20),Vector2(0, -20)}, Easing.outSine)
-	utxt:Format( "fade", true, 0, 0.3, 0, 255)
+	if chat_enabled then
+		utxt:Format( "fade", true, 0, 0.3, 0, utxt.init_alpha, Easing.inOutQuad, {Terminate = true})
+	else
+		utxt.alpha = 0
+	end
 	utxt:Format( "shadow", 1, #utxt.text, -1, -1, 150 )
+
 	utxt.finalcallback = function( ut ) table.remove(self.Messages,ut.MessageID) end
 	if paused then utxt.alpha = utxt.alpha * 0.50 end
-	if utchat_hidden then utxt.alpha = 0 end
 	table.insert(self.Messages, 1, utxt)
 
 	for ix,m in ipairs(self.Messages) do
@@ -90,7 +95,8 @@ function UTChat:PostMessage( utxt )
 				m:SetDuration(0.1)
 			else
 				local msgremainder = (msgs_visible-msgs_fade)
-				m.alpha = (((((-(ix-msgs_fade) * (ix-msgs_fade))/msgremainder + msgremainder))/msgremainder)*(paused and 255*0.5 or 255))
+				m.init_alpha = (((((-(ix-msgs_fade) * (ix-msgs_fade))/msgremainder + msgremainder))/msgremainder)*(paused and 255*0.5 or 255))
+				m.alpha = m.init_alpha
 			end
 		end
 	end
@@ -131,20 +137,20 @@ end
 
 function UTChat:ToggleChat( enabled )
 	for i,m in ipairs(self.Messages) do
-		if not enabled and m.alpha == m.oldalpha or not m.oldalpha then
-			m.oldalpha = m.alpha
-		end
-		local end_alpha = enabled and m.oldalpha or 0
-		m:Format("fade", true, 0, 0.5, m.alpha, end_alpha, Easing.inOutQuad, {Override = true, Terminate = enabled})
+		local end_alpha = enabled and m.init_alpha or 0
+		m:Format("fade", true, 0, 0.5, m.color.a, end_alpha, Easing.inOutQuad, {Terminate = true})
 		m:Optimize()
 	end
-	chat_disabled = enabled
+	chat_enabled = enabled
 end
 
 function UTChat:Render( args ) -- Render Hook
-	if (Chat:GetUserEnabled() and Chat:GetEnabled()) != chat_disabled then self:ToggleChat(Chat:GetUserEnabled() and Chat:GetEnabled()) end
+	if (Chat:GetUserEnabled() and Chat:GetEnabled()) != chat_enabled then self:ToggleChat(Chat:GetUserEnabled() and Chat:GetEnabled()) end
 	if paused != (Game:GetState() != GUIState.Game) then
-		for i,m in ipairs(self.Messages) do m.alpha = m.alpha * (paused and 2 or 0.50) end
+		for i,m in ipairs(self.Messages) do
+			m.alpha = paused and m.init_alpha or
+			chat_enabled and (m.init_alpha * 0.50) or 0
+		end
 		paused = (Game:GetState() != GUIState.Game)
 	end
 

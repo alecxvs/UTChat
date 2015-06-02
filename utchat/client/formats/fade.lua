@@ -45,7 +45,7 @@ Events:Subscribe( "ModulesLoad", function()
 		self.Rewind		= Extra.Rewind
 		self.AccessParent	= Extra.Override
 		self.Terminate   = Extra.Terminate
-		
+
 		if Extra.Repeat == true or Extra.Repeat == 1 then
 			self.Repetitions	= 0
 			self.Repeat 		= true
@@ -56,7 +56,7 @@ Events:Subscribe( "ModulesLoad", function()
 			self.Repetitions 	= 1
 			self.Repeat 		= false
 		end
-		
+
 
 		if not (type(StartTime)			== "number" and
 				type(Duration)			== "number" and
@@ -79,19 +79,19 @@ Events:Subscribe( "ModulesLoad", function()
 			self.StartAlpha = self.EndAlpha
 			self.EndAlpha = s
 		end
-		
+
 		if not self.init then
 			self.StartTime = os.clock() + self.StartTime
 			self.init = true
 		end
 		timeEnd = self.StartTime + self.Duration
-		
+
 		if self.rewinding then
 			timeElapsed = (os.clock() - (os.clock() - self.StartTime)*2) - (self.StartTime - self.Duration)
 		else
 			timeElapsed = os.clock() - self.StartTime
 		end
-		
+
 		if self.StartTime <= os.clock() and os.clock() <= timeEnd then
 			self.alpha = self.Func(timeElapsed, self.StartAlpha, self.EndAlpha, self.Duration)
 		elseif self.StartTime > os.clock() then
@@ -117,9 +117,9 @@ Events:Subscribe( "ModulesLoad", function()
 		end
 		::nocalc::
 		if self.AccessParent then
-			block.parent.alpha = self.alpha
+			block.parent.alpha = math.clamp(Copy(self.alpha), 0, 255)
 		else
-			block.color.a = self.alpha
+			block.color.a = math.clamp(Copy(self.alpha), 0, 255)
 		end
 	end
 

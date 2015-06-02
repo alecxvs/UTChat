@@ -33,7 +33,7 @@
 
 		self.lifetime = 0
 		self.alpha = 255
-		self.color = Color.White
+		self.color = Copy(Color.White)
 
 		self.textsize = 16
 		self.scale = 1
@@ -60,6 +60,11 @@
 				error("UText Error: Constructor does not match overloads (Received value of type "..class_info(v).name.." in <extra>)")
 			end
 		end
+
+		self.init_color = Copy(self.color)
+		self.init_alpha = Copy(self.alpha)
+		self.init_scale = Copy(self.scale)
+		self.init_textsize = Copy(self.textsize)
 	end
 
 
@@ -232,7 +237,7 @@ end
 				fmtfunction = select(i,...)
 				paramindex = i+1
 			elseif i >= paramindex then
-				table.insert(argbuilder,par)
+				table.insert(argbuilder, Copy(par))
 				argbuilder.n = argbuilder.n + 1
 			end
 		end
@@ -297,7 +302,7 @@ end
 				end
 			end
 
-			block.color 	= Color.White
+			block.color 	= Copy(Color.White)
 			block.textsize 	= self.textsize
 			block.scale 	= self.scale
 			block.position 	= self.position
@@ -333,7 +338,7 @@ end
 					fmt:Render(block)
 				end
 				xoffset=xoffset+Render:GetTextWidth(block.text,block.textsize,block.scale)
-				corrected_color = block.color
+				corrected_color = Copy(block.color)
 				corrected_color.a = corrected_color.a*(block.alpha*(self.color.a*(self.alpha/255)/255)/255)
 			end
 			Render:DrawText( block.position, block.text, corrected_color, block.textsize, block.scale )

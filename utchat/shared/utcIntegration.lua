@@ -6,7 +6,7 @@ Events:Subscribe("ModuleLoad", function()
 	if UTLib then return end
 
 	local ptcMethod = function(player, text, color)
-		PrintChat({player = player, text = text, color = color or Color.White})
+		PrintChat({player = player, text = text, color = color or Copy(Color.White)})
 	end
 
 	local ctcMethod = function(_c, text, color)

@@ -65,6 +65,8 @@ class 'Motion'
 			end
 		end
 
+		Extra = Extra or {}
+
 		self.StartTime		= StartTime
 		self.Duration		= Duration
 		self.Offset 		= self.Offset or Vector2(0,0)
@@ -72,7 +74,7 @@ class 'Motion'
 		self.Func			= Func or Easing.linear
 		self.RepeatDelay	= 0 or Extra.RepeatDelay
 		self.Rewind			= Extra.Rewind
-		
+
 		if Extra.Repeat == true or Extra.Repeat == 1 then
 			self.Repetitions	= 0
 			self.Repeat 		= true
@@ -83,9 +85,9 @@ class 'Motion'
 			self.Repetitions 	= 1
 			self.Repeat 		= false
 		end
-		
+
 		self.Actual = Extra.Actual or false
-		
+
 
 		if not (type(StartTime)			== "number" and
 				type(Duration)			== "number" and
@@ -105,16 +107,16 @@ class 'Motion'
 		if not self.global then
 			block.vposition = block.position
 		end
-		
+
 		local timeElapsed
 		local timeEnd = self.StartTime + self.Duration
-		
+
 		if self.rewinding then
 			timeElapsed = (os.clock() - (os.clock() - self.StartTime)*2) - (self.StartTime - self.Duration)
 		else
 			timeElapsed = os.clock() - self.StartTime
 		end
-		
+
 		if self.StartTime <= os.clock() and os.clock() <= timeEnd then
 			self.vec = Vector2(
 			self.MoveOffset.x != 0 and
