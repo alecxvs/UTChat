@@ -30,23 +30,23 @@
 		assert(position, "UText Error: Constructor parameter 'position' is required -- was nil")
 		assert((class_info(position).name):lower() == "vector2", "UText Error: Constructor parameter 'position' must be a vector")
 		self.position = position
-		
+
 		self.lifetime = 0
 		self.alpha = 255
 		self.color = Color.White
-		
+
 		self.textsize = 16
 		self.scale = 1
-		
+
 		self.formats = nil
 		self.gformats = nil
 		self.optimized = false
-		
+
 		self.startTime = os.clock()
 		self.endTime = os.clock() + self.lifetime
-		
+
 		self.__strtable = {}
-		
+
 		for _, v in ipairs({...}) do
 			if type(v) == "number" then
 				self.duration = v
@@ -61,12 +61,12 @@
 			end
 		end
 	end
-	
-	
+
+
 local function escape(s)
 	return (s:gsub('[%-%.%+%[%]%(%)%$%^%%%?%*]','%%%1'):gsub('%z','%%z'))
 end
-	
+
 ----:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::----
 --:::::::::::					User Access Function					:::::::::::::--
 ----:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::----
@@ -79,7 +79,7 @@ end
 
 	--Modifies the text (be mindful of existing format tags)
 	--                    (string)
-	function UText:SetText(text) 
+	function UText:SetText(text)
 		assert(text,"UText Error: SetText parameter 'text' is required -- was nil")
 		self.text = text
 		self:Optimize()
@@ -96,19 +96,21 @@ end
 			end
 		end
 	end
-	
+
 	function UText:RemoveText(first, index)
 		if type(first) == "number" then
 			local firstindex, lastindex = first,index
 			local length = lastindex - firstindex + 1
-			
+
 			self.text = self.text:sub(1,firstindex-1) .. self.text:sub(lastindex+1)
-			
-			for i,f in ipairs(self.formats) do
-				if f.endpos > lastindex then
-					f.endpos = f.endpos - length
-					if f.startpos > lastindex then
-						f.startpos = f.startpos - length
+
+			if self.formats then
+				for i,f in ipairs(self.formats) do
+					if f.endpos > lastindex then
+						f.endpos = f.endpos - length
+						if f.startpos > lastindex then
+							f.startpos = f.startpos - length
+						end
 					end
 				end
 			end
@@ -121,8 +123,8 @@ end
 		else
 			error("UText Error: RemoveText expected (firstindex, lastindex) or (string, index)")
 		end
-	end	
-	
+	end
+
 	function UText:ReplaceText(text, repl)
 		text = escape(text)
 		print("^.-()"..text.."().*")
@@ -130,9 +132,9 @@ end
 		if not firstindex or not lastindex then return false end
 		local length = lastindex - firstindex + 1
 		local diff = #text - #repl
-		
+
 		self.text = self.text:gsub("(.-)"..text.."(.-)","%1"..repl.."%2")
-		
+
 		if diff != 0 then
 			local i = 1
 			::refresh::
@@ -143,13 +145,13 @@ end
 				elseif lastindex-diff < f.startpos then
 					f.startpos = lastindex + diff
 				end
-					
+
 				if f.endpos >= lastindex then
 					f.endpos = f.endpos + diff
 				elseif lastindex-diff < f.endpos then
 					f.endpos = lastindex + diff
 				end
-				
+
 				if f.endpos == f.startpos then
 					table.remove(self.formats,i)
 					goto refresh
@@ -158,17 +160,17 @@ end
 			end
 		end
 		return true
-	end	
-	
+	end
+
 	--Returns the duration of the visibility of UText
-	function UText:GetDuration() 
+	function UText:GetDuration()
 		return self.lifetime
 	end
 
 	--- Sets the duration of the visibility of UText
 	--- Takes a number, optional boolean where if true, the text's lifespan is not restarted to the current time
 	--						  (number,   boolean)
-	function UText:SetDuration(duration, noReset) 
+	function UText:SetDuration(duration, noReset)
 		assert(type(duration) == "number","UText Error: Invalid parameter to SetDuration -- requires a number, got "..type(duration))
 		self.lifetime = duration
 		if noReset then
@@ -178,12 +180,12 @@ end
 			self.endTime = os.clock()+self.lifetime
 		end
 	end
-	
+
 ----:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::----
 --:::::::::::		Internal Functions (Format, Optimize, Render)		:::::::::::::--
 ----:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::----
-	
-	
+
+
 	function UText:__insertfmt(fmt, global)
 		if global then
 			fmt.global = true
@@ -192,12 +194,12 @@ end
 			table.insert(self.formats, fmt)
 		end
 	end
-	
+
 	--- Adds a format to the UText object
 	--- Takes a string as the name of the format to be applied
 	--- Unofficial/Unregistered formats can be used given the optional callback FormatCode
 	--- (Advanced users can also input an initialized Format table as the only parameter)
-	function UText:Format(Format, ...) 
+	function UText:Format(Format, ...)
 	--					 (string, number, number, <function>)
 	--					 (string, boolean, <function>)
 	--					 (table)
@@ -206,8 +208,8 @@ end
 		self.optimized = false
 		local global = false
 		local fmtfunction, startindex, endindex
-		local paramindex = 3 
-		
+		local paramindex = 3
+
 		if type(select(1,...)) == "boolean" then
 			global = true
 			paramindex = 2
@@ -217,13 +219,13 @@ end
 			endindex = select(2,...)
 			assert(endindex,"UText Error: Missing start index in Format")
 		end
-		
+
 		if type(Format) == "table" and Format.type and Format.startpos
 										  and Format.endpos then
 			self:__insertfmt(Format, global)
 			return
 		end
-		
+
 		local argbuilder = {n=0}
 		for i,par in pairs({...}) do
 			if i <= paramindex and not fmtfunction and type(select(i,...)) == "function" then
@@ -234,7 +236,7 @@ end
 				argbuilder.n = argbuilder.n + 1
 			end
 		end
-		
+
 		if fmtfunction then
 			local fmt = fmtfunction(startindex, endindex, argbuilder)
 			fmt.type = Format
@@ -254,12 +256,12 @@ end
 		local indexB = #self.text
 		local indexA = 1
 		local pos = 1
-		
+
 		if #self.formats <= 0 then
 			self.__strtable = {{ text = self.text , length = #self.text }}
 			goto finish
 		end
-		
+
 		do --Split text into blocks based on boundaries of formats
 			::beginning::
 			indexB = #self.text
@@ -282,8 +284,8 @@ end
 			indexA=indexB+1
 			if indexA <= #self.text then goto beginning end
 		end
-		
-		
+
+
 		::finish::
 		for i,block in ipairs(self.__strtable) do --Apply formats (if applicable) and finishing touches to the block
 			if #self.formats > 0 then
@@ -294,22 +296,22 @@ end
 					end
 				end
 			end
-			
+
 			block.color 	= Color.White
 			block.textsize 	= self.textsize
 			block.scale 	= self.scale
 			block.position 	= self.position
 			block.parent 	= self
 			block.alpha		= 255
-			
+
 			pos = pos + block.length
-			
+
 		end
 		self.optimized=true
 	end
 
 	-- Call this in a render hook when you are ready to draw your UText object
-	function UText:Render() -- Not a hook, just literal	
+	function UText:Render() -- Not a hook, just literal
 		if not self.optimized then self:Optimize() return self end
 		assert(self.__strtable and self.optimized,"UText Error: Attempted render before optimization!")
 		local chars = 0
@@ -320,7 +322,7 @@ end
 			fmt:Render(self)
 		end
 		self.parent = nil
-		
+
 		for i,block in ipairs(self.__strtable) do
 			block.position=self.position+Vector2(xoffset,0)
 			local corrected_color = Copy(self.color)

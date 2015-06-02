@@ -1,23 +1,24 @@
-function utChatall(c, ...)
-	utliChat(c, nil, ...)
-end
-function utliChat(c_class, x1, x2, x3)
-	local args = {}
-	if x3 then
-		args = {player = x1, text = x2, color = x3}
-	else
-		args = {text = x1, color = x2}
-	end
+function PrintChat(args)
 	Events:Fire("NetworkedEvent", {name = "PrintChat", args = args})
 end
+
 Events:Subscribe("ModuleLoad", function()
 	if UTLib then return end
+
+	local ptcMethod = function(player, text, color)
+		PrintChat({player = player, text = text, color = color or Color.White})
+	end
+
+	local ctcMethod = function(_c, text, color)
+		PrintChat({text = text, color = color})
+	end
+
 	if Client then
-			Chat.Print = utliChat
+			Chat.Print = ctcMethod
 	end
 	if Server then
-			Chat.Send = utliChat
-			Chat.Broadcast = utliChatall
-			Player.SendChatMessage = function(...) utliChat(nil,...) end
+			Chat.Send = ptcMethod
+			Chat.Broadcast = ctcMethod
+			Player.SendChatMessage = ptcMethod
 	end
 end)
