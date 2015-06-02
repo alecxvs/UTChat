@@ -1,25 +1,23 @@
-function PrintChat(args)
-	Events:Fire("NetworkedEvent", {name = "PrintChat", args = args})
+function PrintChat(player, text, color)
+	Events:Fire("NetworkedEvent", {
+		name = "PrintChat", args = {
+			text = text,
+			color = color,
+			player = IsValid(player) and player or nil
+		}
+	})
 end
 
 Events:Subscribe("ModuleLoad", function()
 	if UTLib then return end
 
-	local pcMethod = function(text, color)
-		PrintChat({player = player, text = text, color = color or Copy(Color.White)})
-	end
-
-	local cpcMethod = function(_c, text, color)
-		PrintChat({text = text, color = color})
-	end
-
 	if Client then
-			Chat.Print = cpcMethod
+		function Chat:Print(...) PrintChat(nil, ...) end
 	end
 
 	if Server then
-		Chat.Send = cpcMethod
-		Chat.Broadcast = pcMethod
-		Player.SendChatMessage = pcMethod
+		function Chat:Send(...) PrintChat(...) end
+		function Chat:Broadcast(...) PrintChat(nil, ...) end
+		function Player:SendChatMessage(...) PrintChat(self, ...) end
 	end
 end)
