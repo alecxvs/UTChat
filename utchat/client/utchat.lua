@@ -72,7 +72,7 @@ function UTChat:PostMessage( utxt )
 	if chat_enabled then
 		utxt:Format( "fade", true, 0, 0.3, 0, utxt.init_alpha, Easing.inOutQuad, {Terminate = true})
 	else
-		utxt.alpha = 0
+		utxt.color.a = 0
 	end
 	utxt:Format( "shadow", 1, #utxt.text, -1, -1, 150 )
 
@@ -95,8 +95,8 @@ function UTChat:PostMessage( utxt )
 				m:SetDuration(0.1)
 			else
 				local msgremainder = (msgs_visible-msgs_fade)
-				m.init_alpha = (((((-(ix-msgs_fade) * (ix-msgs_fade))/msgremainder + msgremainder))/msgremainder)*(paused and 255*0.5 or 255))
-				m.alpha = m.init_alpha
+				m.init_alpha = ((((-(ix-msgs_fade) * (ix-msgs_fade))/msgremainder + msgremainder))/msgremainder) * 255
+				m.alpha = m.init_alpha * (paused and 0.5 or 1)
 			end
 		end
 	end
