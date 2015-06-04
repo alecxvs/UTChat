@@ -153,6 +153,7 @@ function UTChat:Render( args ) -- Render Hook
 		print("Warning: Last render was not complete! Failed render on message "..render_last)
 		message_start = render_last
 	end
+  render_ok = false
 	if (Chat:GetUserEnabled() and Chat:GetEnabled()) != chat_enabled then self:ToggleChat(Chat:GetUserEnabled() and Chat:GetEnabled()) end
 	if paused != (Game:GetState() != GUIState.Game) then
 		for message_start,m in ipairs(self.Messages) do
@@ -167,6 +168,7 @@ function UTChat:Render( args ) -- Render Hook
 			m:Render()
 		end
 	end
+  render_ok = true
 end
 
 utchat = UTChat()
